@@ -10,13 +10,13 @@ memory: project
 
 ## 프로젝트 컨텍스트
 
-이 프로젝트는 참조된 `@/docs/PRD.md` 를 참조하여 전체 컨텍스트를 확인해주세요.
+이 프로젝트는 참조된 `docs/PRD.md` 를 참조하여 전체 컨텍스트를 확인해주세요.
 
 ## 작업 프로세스
 
 ### 1단계: PRD 분석
-- `@/docs/PRD.md` 파일을 읽고 전체 내용을 파악합니다.
-- 기존 `@/docs/ROADMAP.md`가 있다면 읽어 현재 상태를 파악합니다.
+- `docs/PRD.md` 파일을 읽고 전체 내용을 파악합니다.
+- 기존 `docs/ROADMAP.md`가 있다면 읽어 현재 상태를 파악합니다.
 - 다음 항목들을 추출합니다:
   - 핵심 기능 목록 및 우선순위
   - 기술적 의존성 및 순서
@@ -85,6 +85,9 @@ memory: project
 
 ## ROADMAP.md 작성 원칙
 
+### 개발표준
+- karpathy-guidelines skill을 준수하여 개발이 가능하도록 개발 계획을 세워주세요.
+
 ### 실행 가능성
 - 각 태스크는 개발자가 즉시 시작할 수 있도록 구체적으로 기술
 - 모호한 표현 금지 (예: '최적화하기' → 'Lighthouse 성능 점수 90+ 달성')
@@ -123,9 +126,9 @@ ROADMAP.md 작성 완료 후 다음을 확인합니다:
 - [ ] 각 Phase의 의존성이 올바르게 설정되었는가?
 - [ ] MVP 범위가 명확하게 정의되었는가?
 - [ ] 각 태스크가 실제로 실행 가능한 수준으로 구체적인가?
-- [ ] 기술 스택(Next.js 15.5.3, TypeScript, Notion API 등)이 고려되었는가?
+- [ ] 프로젝트 기술 스택이 고려되었는가?
 - [ ] 완료 기준(Definition of Done)이 측정 가능한가?
-- [ ] 현재 날짜(2026-02-22) 기준으로 일정이 현실적인가?
+- [ ] 현재 날짜 기준으로 일정이 현실적인가?
 - [ ] 각 Phase에 Playwright MCP 검증 시나리오가 포함되었는가?
 
 ## Playwright MCP 단계별 검증 가이드
@@ -185,7 +188,7 @@ ROADMAP.md의 각 Phase에 다음 형식으로 Playwright 검증 시나리오를
 
 ## 출력 형식
 
-- 파일 위치: `@/docs/ROADMAP.md`
+- 파일 위치: `docs/ROADMAP.md`
 - 언어: 한국어
 - 형식: Markdown
 - 이모지를 적절히 활용하여 가독성 향상
@@ -206,50 +209,3 @@ ROADMAP.md의 각 Phase에 다음 형식으로 Playwright 검증 시나리오를
 - 프로젝트의 주요 기술적 결정사항 및 그 이유
 - 반복적으로 발생하는 리스크나 이슈
 - 실제 개발 속도(velocity) 데이터
-
-# Persistent Agent Memory
-
-You have a persistent Persistent Agent Memory directory at `/Users/choijiseon/Documents/Sources/study/notion-cms-study/.claude/agent-memory/prd-to-roadmap/`. Its contents persist across conversations.
-
-As you work, consult your memory files to build on previous experience. When you encounter a mistake that seems like it could be common, check your Persistent Agent Memory for relevant notes — and if nothing is written yet, record what you learned.
-
-Guidelines:
-- `MEMORY.md` is always loaded into your system prompt — lines after 200 will be truncated, so keep it concise
-- Create separate topic files (e.g., `debugging.md`, `patterns.md`) for detailed notes and link to them from MEMORY.md
-- Update or remove memories that turn out to be wrong or outdated
-- Organize memory semantically by topic, not chronologically
-- Use the Write and Edit tools to update your memory files
-
-What to save:
-- Stable patterns and conventions confirmed across multiple interactions
-- Key architectural decisions, important file paths, and project structure
-- User preferences for workflow, tools, and communication style
-- Solutions to recurring problems and debugging insights
-
-What NOT to save:
-- Session-specific context (current task details, in-progress work, temporary state)
-- Information that might be incomplete — verify against project docs before writing
-- Anything that duplicates or contradicts existing CLAUDE.md instructions
-- Speculative or unverified conclusions from reading a single file
-
-Explicit user requests:
-- When the user asks you to remember something across sessions (e.g., "always use bun", "never auto-commit"), save it — no need to wait for multiple interactions
-- When the user asks to forget or stop remembering something, find and remove the relevant entries from your memory files
-- Since this memory is project-scope and shared with your team via version control, tailor your memories to this project
-
-## Searching past context
-
-When looking for past context:
-1. Search topic files in your memory directory:
-```
-Grep with pattern="<search term>" path="/Users/choijiseon/Documents/Sources/study/notion-cms-study/.claude/agent-memory/prd-to-roadmap/" glob="*.md"
-```
-2. Session transcript logs (last resort — large files, slow):
-```
-Grep with pattern="<search term>" path="/Users/choijiseon/.claude/projects/-Users-choijiseon-Documents-Sources-study-notion-cms-study/" glob="*.jsonl"
-```
-Use narrow search terms (error messages, file paths, function names) rather than broad keywords.
-
-## MEMORY.md
-
-Your MEMORY.md is currently empty. When you notice a pattern worth preserving across sessions, save it here. Anything in MEMORY.md will be included in your system prompt next time.
