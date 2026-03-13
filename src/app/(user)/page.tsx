@@ -13,7 +13,7 @@ export default async function RootPage() {
     .single();
 
   if (doc) {
-    redirect(`/docs/${doc.slug}`);
+    redirect(`/docs/${doc.slug.split('/').map(encodeURIComponent).join('/')}`);
   }
 
   // 게시된 문서가 없으면 404 페이지

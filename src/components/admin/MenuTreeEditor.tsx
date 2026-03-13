@@ -119,7 +119,7 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('menus')
-      .insert({ parent_id: parentId, title: trimmedTitle, depth, order_index: Date.now() })
+      .insert({ parent_id: parentId, title: trimmedTitle, depth, order_index: Math.floor(Date.now() / 1000) })
       .select()
       .single();
 
@@ -183,7 +183,7 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('menus')
-      .insert({ parent_id: null, title: trimmedTitle, depth: 1, order_index: Date.now() })
+      .insert({ parent_id: null, title: trimmedTitle, depth: 1, order_index: Math.floor(Date.now() / 1000) })
       .select()
       .single();
 

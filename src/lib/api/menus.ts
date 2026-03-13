@@ -6,6 +6,7 @@ interface DbMenu {
   title: string;
   depth: number;
   order_index: number;
+  slug?: string;
 }
 
 /** DB에서 가져온 flat 메뉴 목록을 트리 구조로 변환 */
@@ -17,6 +18,7 @@ export function buildMenuTree(items: DbMenu[], parentId: string | null = null): 
       id: item.id,
       title: item.title,
       depth: item.depth,
+      slug: item.slug,
       children: buildMenuTree(items, item.id),
     }));
 }

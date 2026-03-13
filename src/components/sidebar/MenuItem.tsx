@@ -27,23 +27,37 @@ export default function MenuItem({ item }: MenuItemProps) {
   if (hasChildren) {
     return (
       <li>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full flex items-center justify-between ${padding} py-1.5 pr-2 text-sm rounded-md hover:bg-gray-100 transition-colors text-left ${
-            isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-          }`}
-          aria-expanded={isOpen}
-        >
-          <span>{item.title}</span>
-          <svg
-            className={`w-3 h-3 text-gray-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className={`flex items-center justify-between ${padding} py-1.5 pr-2 rounded-md ${
+          isActive ? 'bg-blue-50' : 'hover:bg-gray-100'
+        }`}>
+          {/* 문서가 연결된 경우 제목을 링크로 표시 */}
+          {item.slug ? (
+            <Link
+              href={`/docs/${item.slug}`}
+              className={`flex-1 text-sm text-left ${
+                isActive ? 'text-blue-700 font-medium' : 'text-gray-700'
+              }`}
+            >
+              {item.title}
+            </Link>
+          ) : (
+            <span className="flex-1 text-sm text-gray-700">{item.title}</span>
+          )}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="ml-1 text-gray-400 hover:text-gray-600"
+            aria-expanded={isOpen}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+            <svg
+              className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
         {isOpen && (
           <ul>
             {item.children!.map((child) => (
@@ -51,6 +65,17 @@ export default function MenuItem({ item }: MenuItemProps) {
             ))}
           </ul>
         )}
+      </li>
+    );
+  }
+
+  // 문서가 연결되지 않은 단독 메뉴 항목은 링크로 표시하지 않음
+  if (!item.slug) {
+    return (
+      <li>
+        <span className={`block ${padding} py-1.5 pr-2 text-sm text-gray-400 cursor-default`}>
+          {item.title}
+        </span>
       </li>
     );
   }

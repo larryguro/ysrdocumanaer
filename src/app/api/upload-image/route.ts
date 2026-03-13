@@ -4,7 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get('file') as File;
-  const slug = (formData.get('slug') as string) || 'temp';
+  // Storage 경로는 ASCII 영숫자·하이픈만 허용 — 한글 등 비ASCII 제거
+  const rawSlug = (formData.get('slug') as string) || '';
+  const slug =
+    rawSlug
+      .replace(/[^a-z0-9-]/gi, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'temp';
 
   if (!file) {
     return NextResponse.json({ error: '파일이 없습니다.' }, { status: 400 });

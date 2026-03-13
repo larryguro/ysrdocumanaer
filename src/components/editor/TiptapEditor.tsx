@@ -204,6 +204,7 @@ async function uploadImageFile(file: File, slug: string): Promise<string> {
   formData.append('slug', slug || 'temp');
   const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
   const data = await res.json();
+  if (!data.url) throw new Error(data.error ?? '이미지 업로드 실패');
   return data.url as string;
 }
 
@@ -246,13 +247,17 @@ export default function TiptapEditor({
         const file = imageItem.getAsFile();
         if (!file) return false;
 
-        uploadImageFile(file, slugRef.current).then((url) => {
-          const { state } = view;
-          const imageNode = state.schema.nodes.image?.create({ src: url });
-          if (imageNode) {
-            view.dispatch(state.tr.replaceSelectionWith(imageNode));
-          }
-        });
+        uploadImageFile(file, slugRef.current)
+          .then((url) => {
+            const { state } = view;
+            const imageNode = state.schema.nodes.image?.create({ src: url });
+            if (imageNode) {
+              view.dispatch(state.tr.replaceSelectionWith(imageNode));
+            }
+          })
+          .catch((err: Error) => {
+            alert('이미지 업로드 실패: ' + err.message);
+          });
         return true; // 기본 붙여넣기 동작 차단
       },
     },
