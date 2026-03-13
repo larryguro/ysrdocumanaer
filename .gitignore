@@ -3,3 +3,21 @@
 
 # macOS
 .DS_Store
+
+# 의존성
+node_modules
+
+# Next.js
+.next/
+out/
+
+# 환경 변수
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 빌드 캐시
+*.tsbuildinfo
+next-env.d.ts
