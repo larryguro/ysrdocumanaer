@@ -19,3 +19,26 @@ export interface DocumentType {
   createdAt: string;
   updatedAt: string;
 }
+
+// 관리자용 문서 목록 타입
+export interface AdminDocumentType {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'draft' | 'published';
+  menuId?: string;
+  menuTitle?: string;
+  updatedBy: string;
+  updatedAt: string;
+  createdAt: string;
+}
+
+// 관리자 사용자 타입
+export interface AdminUserType {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin';
+  isActive: boolean;
+  createdAt: string;
+}

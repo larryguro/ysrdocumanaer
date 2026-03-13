@@ -1,4 +1,4 @@
-import { MenuItemType, DocumentType } from '@/types';
+import { MenuItemType, DocumentType, AdminDocumentType, AdminUserType } from '@/types';
 
 export const MOCK_MENU: MenuItemType[] = [
   {
@@ -110,3 +110,88 @@ const greeting = (name: string): string => {
 `,
   },
 };
+
+export const MOCK_ADMIN_DOCUMENTS: AdminDocumentType[] = [
+  {
+    id: '1',
+    title: '의사랑 v2.0 변경내역서',
+    slug: 'changelog-v2',
+    status: 'published',
+    menuId: '3-1',
+    menuTitle: 'v2.0 변경사항',
+    updatedBy: 'admin@example.com',
+    updatedAt: '2026-03-13',
+    createdAt: '2026-03-01',
+  },
+  {
+    id: '2',
+    title: '의사랑 v1.9 변경내역서',
+    slug: 'changelog-v1-9',
+    status: 'published',
+    menuId: '3-2',
+    menuTitle: 'v1.9 변경사항',
+    updatedBy: 'admin@example.com',
+    updatedAt: '2026-02-15',
+    createdAt: '2026-02-01',
+  },
+  {
+    id: '3',
+    title: 'Windows 설치 가이드',
+    slug: 'install-windows',
+    status: 'published',
+    menuId: '1-2-1',
+    menuTitle: 'Windows 설치',
+    updatedBy: 'admin@example.com',
+    updatedAt: '2026-03-10',
+    createdAt: '2026-02-20',
+  },
+  {
+    id: '4',
+    title: 'macOS 설치 가이드',
+    slug: 'install-macos',
+    status: 'draft',
+    menuId: '1-2-2',
+    menuTitle: 'macOS 설치',
+    updatedBy: 'admin@example.com',
+    updatedAt: '2026-03-12',
+    createdAt: '2026-03-05',
+  },
+  {
+    id: '5',
+    title: '네트워크 설정 가이드',
+    slug: 'network-setup',
+    status: 'draft',
+    menuId: '1-2-3-2',
+    menuTitle: '네트워크 설정',
+    updatedBy: 'admin@example.com',
+    updatedAt: '2026-03-13',
+    createdAt: '2026-03-13',
+  },
+];
+
+export const MOCK_ADMIN_USERS: AdminUserType[] = [
+  {
+    id: 'u1',
+    email: 'admin@example.com',
+    name: '관리자',
+    role: 'admin',
+    isActive: true,
+    createdAt: '2026-01-01',
+  },
+  {
+    id: 'u2',
+    email: 'editor@example.com',
+    name: '편집자',
+    role: 'admin',
+    isActive: true,
+    createdAt: '2026-02-01',
+  },
+  {
+    id: 'u3',
+    email: 'readonly@example.com',
+    name: '열람자',
+    role: 'admin',
+    isActive: false,
+    createdAt: '2026-02-15',
+  },
+];
