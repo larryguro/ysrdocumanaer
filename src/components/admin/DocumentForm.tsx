@@ -85,7 +85,9 @@ export default function DocumentForm({
       const autoSlug = value
         .toLowerCase()
         .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-가-힣]/g, '')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
         .slice(0, 50);
       setSlug(autoSlug);
     }
@@ -93,7 +95,8 @@ export default function DocumentForm({
 
   function handleSlugChange(value: string) {
     setIsSlugManual(true);
-    setSlug(value);
+    // 영문 소문자, 숫자, 하이픈만 허용
+    setSlug(value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -208,7 +211,7 @@ export default function DocumentForm({
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">제목 입력 시 자동 생성됩니다. 직접 수정도 가능합니다.</p>
+            <p className="text-xs text-gray-400 mt-1">영문 소문자, 숫자, 하이픈(-)만 사용 가능합니다. 제목 입력 시 자동 생성됩니다.</p>
           </div>
 
           <div>
