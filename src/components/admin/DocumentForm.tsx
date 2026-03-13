@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { MOCK_MENU } from '@/lib/mock-data';
 import { MenuItemType } from '@/types';
 
-// Milkdown은 SSR 비활성화로 동적 임포트
-const MilkdownEditor = dynamic(() => import('@/components/editor/MilkdownEditor'), {
+// TipTap은 DOM 의존 → SSR 비활성화
+const TiptapEditor = dynamic(() => import('@/components/editor/TiptapEditor'), {
   ssr: false,
   loading: () => (
     <div className="border border-gray-300 rounded-md min-h-[400px] flex items-center justify-center text-gray-400 bg-gray-50">
@@ -136,9 +136,10 @@ export default function DocumentForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">본문</label>
-            <MilkdownEditor
+            <TiptapEditor
               defaultValue={initialContent || '# 제목\n\n내용을 작성하세요.'}
               onChange={setContent}
+              slug={slug}
             />
           </div>
         </div>
