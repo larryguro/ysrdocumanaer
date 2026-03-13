@@ -1,6 +1,21 @@
 import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
-export default function RootPage() {
-  // 첫 번째 문서로 리다이렉트 (Sprint 3에서 DB 기반으로 교체)
-  redirect('/docs/sample');
+export default async function RootPage() {
+  const supabase = await createClient();
+
+  const { data: doc } = await supabase
+    .from('documents')
+    .select('slug')
+    .eq('status', 'published')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single();
+
+  if (doc) {
+    redirect(`/docs/${doc.slug}`);
+  }
+
+  // 게시된 문서가 없으면 404 페이지
+  redirect('/docs/not-found');
 }

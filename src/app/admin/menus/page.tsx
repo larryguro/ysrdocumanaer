@@ -1,7 +1,12 @@
-import { MOCK_MENU } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { buildMenuTree } from '@/lib/api/menus';
 import MenuTreeEditor from '@/components/admin/MenuTreeEditor';
 
-export default function MenusPage() {
+export default async function MenusPage() {
+  const supabase = await createClient();
+  const { data } = await supabase.from('menus').select('*').order('order_index');
+  const menuTree = buildMenuTree(data ?? []);
+
   return (
     <div>
       <div className="mb-6">
@@ -10,7 +15,7 @@ export default function MenusPage() {
           사용자 페이지에 표시될 메뉴 구조를 관리합니다. 드래그앤드롭 정렬은 Sprint 5에서 추가됩니다.
         </p>
       </div>
-      <MenuTreeEditor initialMenu={MOCK_MENU} />
+      <MenuTreeEditor initialMenu={menuTree} />
     </div>
   );
 }

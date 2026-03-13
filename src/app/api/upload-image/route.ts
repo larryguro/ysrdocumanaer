@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -16,10 +15,21 @@ export async function POST(request: NextRequest) {
 
   const ext = file.name.split('.').pop() || 'png';
   const filename = `${Date.now()}.${ext}`;
-  const dir = path.join(process.cwd(), 'public', 'uploads', slug, 'images');
+  const path = `${slug}/images/${filename}`;
 
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, filename), buffer);
+  const supabase = createAdminClient();
 
-  return NextResponse.json({ url: `/uploads/${slug}/images/${filename}` });
+  const { error } = await supabase.storage
+    .from('document-images')
+    .upload(path, buffer, { contentType: file.type, upsert: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('document-images').getPublicUrl(path);
+
+  return NextResponse.json({ url: publicUrl });
 }

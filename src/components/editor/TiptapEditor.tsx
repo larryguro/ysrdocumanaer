@@ -226,6 +226,7 @@ export default function TiptapEditor({
   slugRef.current = slug;
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Underline,

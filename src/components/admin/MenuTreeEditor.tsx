@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { MenuItemType } from '@/types';
 
 interface MenuNodeProps {
   item: MenuItemType;
-  onAdd: (parentId: string) => void;
-  onRename: (id: string, newTitle: string) => void;
-  onDelete: (id: string) => void;
+  onAdd: (parentId: string, parentDepth: number) => Promise<void>;
+  onRename: (id: string, newTitle: string) => Promise<void>;
+  onDelete: (id: string, title: string) => Promise<void>;
 }
 
 function MenuNode({ item, onAdd, onRename, onDelete }: MenuNodeProps) {
@@ -15,9 +16,9 @@ function MenuNode({ item, onAdd, onRename, onDelete }: MenuNodeProps) {
   const [editTitle, setEditTitle] = useState(item.title);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  function handleRename() {
+  async function handleRename() {
     if (editTitle.trim() && editTitle !== item.title) {
-      onRename(item.id, editTitle.trim());
+      await onRename(item.id, editTitle.trim());
     }
     setIsEditing(false);
   }
@@ -62,7 +63,7 @@ function MenuNode({ item, onAdd, onRename, onDelete }: MenuNodeProps) {
         <div className="hidden group-hover:flex items-center gap-1">
           {item.depth < 4 && (
             <button
-              onClick={() => onAdd(item.id)}
+              onClick={() => onAdd(item.id, item.depth)}
               className="text-xs text-blue-500 hover:text-blue-700 px-1"
               title="하위 메뉴 추가"
             >
@@ -76,11 +77,7 @@ function MenuNode({ item, onAdd, onRename, onDelete }: MenuNodeProps) {
             수정
           </button>
           <button
-            onClick={() => {
-              if (confirm(`"${item.title}" 메뉴를 삭제하시겠습니까?`)) {
-                onDelete(item.id);
-              }
-            }}
+            onClick={() => onDelete(item.id, item.title)}
             className="text-xs text-red-500 hover:text-red-700 px-1"
           >
             삭제
@@ -113,12 +110,20 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
   const [menu, setMenu] = useState<MenuItemType[]>(initialMenu);
   const [newRootTitle, setNewRootTitle] = useState('');
 
-  function addMenuItem(parentId: string) {
+  async function addMenuItem(parentId: string, parentDepth: number) {
     const newTitle = prompt('새 메뉴 이름을 입력하세요:');
     if (!newTitle?.trim()) return;
-
-    const newId = `menu-${Date.now()}`;
     const trimmedTitle = newTitle.trim();
+    const depth = parentDepth + 1;
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('menus')
+      .insert({ parent_id: parentId, title: trimmedTitle, depth, order_index: Date.now() })
+      .select()
+      .single();
+
+    if (error || !data) { alert('메뉴 추가 오류: ' + (error?.message ?? '')); return; }
 
     function addToTree(items: MenuItemType[]): MenuItemType[] {
       return items.map((item) => {
@@ -127,7 +132,7 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
             ...item,
             children: [
               ...(item.children ?? []),
-              { id: newId, title: trimmedTitle, depth: item.depth + 1, children: [] },
+              { id: data.id, title: trimmedTitle, depth, children: [] },
             ],
           };
         }
@@ -135,12 +140,14 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
         return item;
       });
     }
-
     setMenu(addToTree(menu));
-    console.log('메뉴 추가 (Sprint 3에서 DB 연동):', { parentId, title: trimmedTitle });
   }
 
-  function renameMenuItem(id: string, newTitle: string) {
+  async function renameMenuItem(id: string, newTitle: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from('menus').update({ title: newTitle }).eq('id', id);
+    if (error) { alert('메뉴 수정 오류: ' + error.message); return; }
+
     function renameInTree(items: MenuItemType[]): MenuItemType[] {
       return items.map((item) => {
         if (item.id === id) return { ...item, title: newTitle };
@@ -149,10 +156,15 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
       });
     }
     setMenu(renameInTree(menu));
-    console.log('메뉴 이름 변경 (Sprint 3에서 DB 연동):', { id, newTitle });
   }
 
-  function deleteMenuItem(id: string) {
+  async function deleteMenuItem(id: string, title: string) {
+    if (!confirm(`"${title}" 메뉴를 삭제하시겠습니까? 하위 메뉴도 함께 삭제됩니다.`)) return;
+
+    const supabase = createClient();
+    const { error } = await supabase.from('menus').delete().eq('id', id);
+    if (error) { alert('메뉴 삭제 오류: ' + error.message); return; }
+
     function deleteFromTree(items: MenuItemType[]): MenuItemType[] {
       return items
         .filter((item) => item.id !== id)
@@ -162,15 +174,23 @@ export default function MenuTreeEditor({ initialMenu }: MenuTreeEditorProps) {
         }));
     }
     setMenu(deleteFromTree(menu));
-    console.log('메뉴 삭제 (Sprint 3에서 DB 연동):', id);
   }
 
-  function addRootMenu() {
+  async function addRootMenu() {
     if (!newRootTitle.trim()) return;
-    const newId = `menu-${Date.now()}`;
-    setMenu([...menu, { id: newId, title: newRootTitle.trim(), depth: 1, children: [] }]);
+    const trimmedTitle = newRootTitle.trim();
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('menus')
+      .insert({ parent_id: null, title: trimmedTitle, depth: 1, order_index: Date.now() })
+      .select()
+      .single();
+
+    if (error || !data) { alert('메뉴 추가 오류: ' + (error?.message ?? '')); return; }
+
+    setMenu([...menu, { id: data.id, title: trimmedTitle, depth: 1, children: [] }]);
     setNewRootTitle('');
-    console.log('최상위 메뉴 추가 (Sprint 3에서 DB 연동):', newRootTitle);
   }
 
   return (

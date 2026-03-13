@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface FormErrors {
   email?: string;
   password?: string;
+  general?: string;
 }
 
 export default function LoginPage() {
@@ -12,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   function validate(): FormErrors {
     const newErrors: FormErrors = {};
@@ -37,10 +41,21 @@ export default function LoginPage() {
     }
     setErrors({});
     setIsLoading(true);
-    // Sprint 3에서 Supabase Auth 연동 예정
-    console.log('로그인 시도:', { email, password });
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setIsLoading(false);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      setErrors({ general: '이메일 또는 비밀번호가 올바르지 않습니다.' });
+      setIsLoading(false);
+      return;
+    }
+
+    router.push('/admin/documents');
+    router.refresh();
   }
 
   return (
@@ -52,6 +67,12 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
+          {errors.general && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{errors.general}</p>
+            </div>
+          )}
+
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               이메일
