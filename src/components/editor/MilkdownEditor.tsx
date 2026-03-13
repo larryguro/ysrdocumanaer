@@ -1,10 +1,12 @@
 'use client';
 
 import { Editor, rootCtx, defaultValueCtx } from '@milkdown/core';
+import { nord } from '@milkdown/theme-nord';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
+import '@milkdown/theme-nord/style.css';
 
 interface MilkdownEditorInnerProps {
   defaultValue?: string;
@@ -14,6 +16,7 @@ interface MilkdownEditorInnerProps {
 function MilkdownEditorInner({ defaultValue = '', onChange }: MilkdownEditorInnerProps) {
   useEditor((root) =>
     Editor.make()
+      .config(nord)
       .config((ctx) => {
         ctx.set(rootCtx, root);
         if (defaultValue) {
