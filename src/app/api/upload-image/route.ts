@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get('file') as File;
-  const slug = (formData.get('slug') as string) || 'temp';
+  // Storage 경로는 ASCII 영숫자·하이픈만 허용 — 한글 등 비ASCII 제거
+  const rawSlug = (formData.get('slug') as string) || '';
+  const slug =
+    rawSlug
+      .replace(/[^a-z0-9-]/gi, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'temp';
 
   if (!file) {
     return NextResponse.json({ error: '파일이 없습니다.' }, { status: 400 });
@@ -16,10 +21,21 @@ export async function POST(request: NextRequest) {
 
   const ext = file.name.split('.').pop() || 'png';
   const filename = `${Date.now()}.${ext}`;
-  const dir = path.join(process.cwd(), 'public', 'uploads', slug, 'images');
+  const path = `${slug}/images/${filename}`;
 
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, filename), buffer);
+  const supabase = createAdminClient();
 
-  return NextResponse.json({ url: `/uploads/${slug}/images/${filename}` });
+  const { error } = await supabase.storage
+    .from('document-images')
+    .upload(path, buffer, { contentType: file.type, upsert: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('document-images').getPublicUrl(path);
+
+  return NextResponse.json({ url: publicUrl });
 }

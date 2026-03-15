@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { MOCK_ADMIN_DOCUMENTS } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
 import DocumentForm from '@/components/admin/DocumentForm';
 
 interface EditPageProps {
@@ -8,7 +8,13 @@ interface EditPageProps {
 
 export default async function EditDocumentPage({ params }: EditPageProps) {
   const { id } = await params;
-  const doc = MOCK_ADMIN_DOCUMENTS.find((d) => d.id === id);
+  const supabase = await createClient();
+
+  const { data: doc } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('id', id)
+    .single();
 
   if (!doc) {
     notFound();
@@ -17,10 +23,12 @@ export default async function EditDocumentPage({ params }: EditPageProps) {
   return (
     <DocumentForm
       mode="edit"
+      documentId={doc.id}
       initialTitle={doc.title}
       initialSlug={doc.slug}
-      initialStatus={doc.status}
-      initialMenuId={doc.menuId}
+      initialContent={doc.content}
+      initialStatus={doc.status as 'draft' | 'published'}
+      initialMenuId={doc.menu_id ?? ''}
     />
   );
 }

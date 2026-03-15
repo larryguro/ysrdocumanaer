@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MOCK_MENU } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/client';
 import { MenuItemType } from '@/types';
 
 // TipTap은 DOM 의존 → SSR 비활성화
@@ -33,6 +34,7 @@ function flattenMenu(
 
 interface DocumentFormProps {
   mode: 'new' | 'edit';
+  documentId?: string;
   initialTitle?: string;
   initialSlug?: string;
   initialContent?: string;
@@ -42,6 +44,7 @@ interface DocumentFormProps {
 
 export default function DocumentForm({
   mode,
+  documentId,
   initialTitle = '',
   initialSlug = '',
   initialContent = '',
@@ -54,8 +57,27 @@ export default function DocumentForm({
   const [status, setStatus] = useState<'draft' | 'published'>(initialStatus);
   const [menuId, setMenuId] = useState(initialMenuId);
   const [isSlugManual, setIsSlugManual] = useState(!!initialSlug);
+  const [menuOptions, setMenuOptions] = useState<Array<{ id: string; title: string; depth: number }>>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  const menuOptions = flattenMenu(MOCK_MENU);
+  // 메뉴 목록 로드
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('menus')
+      .select('*')
+      .order('order_index')
+      .then(({ data }) => {
+        if (data) {
+          // flat 데이터를 트리 변환 없이 depth 기준으로 들여쓰기 표시
+          setMenuOptions(
+            data.map((m) => ({ id: m.id, title: m.title, depth: m.depth - 1 }))
+          );
+        }
+      });
+  }, []);
 
   function handleTitleChange(value: string) {
     setTitle(value);
@@ -63,7 +85,9 @@ export default function DocumentForm({
       const autoSlug = value
         .toLowerCase()
         .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-가-힣]/g, '')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
         .slice(0, 50);
       setSlug(autoSlug);
     }
@@ -71,13 +95,67 @@ export default function DocumentForm({
 
   function handleSlugChange(value: string) {
     setIsSlugManual(true);
-    setSlug(value);
+    // 영문 소문자, 숫자, 하이픈만 허용
+    setSlug(value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Sprint 3에서 Supabase 연동 예정
-    console.log('문서 저장:', { title, slug, content, status, menuId });
+    if (!title.trim()) { setError('제목을 입력해주세요.'); return; }
+    if (!slug.trim())  { setError('슬러그를 입력해주세요.'); return; }
+
+    setIsSaving(true);
+    setError('');
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (mode === 'new') {
+      const { error: insertError } = await supabase.from('documents').insert({
+        title: title.trim(),
+        slug: slug.trim(),
+        content,
+        status,
+        menu_id: menuId || null,
+        created_by: user?.id,
+        updated_by: user?.id,
+      });
+      if (insertError) {
+        setError(insertError.message);
+        setIsSaving(false);
+        return;
+      }
+    } else {
+      // 수정 이력 저장 후 문서 업데이트
+      if (documentId) {
+        await supabase.from('document_history').insert({
+          document_id: documentId,
+          content: initialContent || '',
+          updated_by: user?.id,
+        });
+      }
+      const { error: updateError } = await supabase
+        .from('documents')
+        .update({
+          title: title.trim(),
+          slug: slug.trim(),
+          content,
+          status,
+          menu_id: menuId || null,
+          updated_by: user?.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', documentId!);
+
+      if (updateError) {
+        setError(updateError.message);
+        setIsSaving(false);
+        return;
+      }
+    }
+
+    router.push('/admin/documents');
+    router.refresh();
   }
 
   return (
@@ -87,6 +165,7 @@ export default function DocumentForm({
           {mode === 'new' ? '새 문서 작성' : '문서 수정'}
         </h1>
         <div className="flex items-center gap-3">
+          {error && <p className="text-sm text-red-500">{error}</p>}
           <Link
             href="/admin/documents"
             className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors"
@@ -95,9 +174,10 @@ export default function DocumentForm({
           </Link>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+            disabled={isSaving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            저장
+            {isSaving ? '저장 중...' : '저장'}
           </button>
         </div>
       </div>
@@ -131,7 +211,7 @@ export default function DocumentForm({
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">제목 입력 시 자동 생성됩니다. 직접 수정도 가능합니다.</p>
+            <p className="text-xs text-gray-400 mt-1">영문 소문자, 숫자, 하이픈(-)만 사용 가능합니다. 제목 입력 시 자동 생성됩니다.</p>
           </div>
 
           <div>
